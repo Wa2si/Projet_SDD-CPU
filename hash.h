@@ -10,7 +10,8 @@
 #define TOMBSTONE ((void*) -1)
 
 typedef struct hashentry {
-    char* key;       
+    char* key; 
+    void* value;      
 } HashEntry;
 
 typedef struct hashmap {

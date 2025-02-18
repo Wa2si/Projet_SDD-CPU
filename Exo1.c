@@ -34,3 +34,34 @@ HashMap* hashmap_create(){
     return new_hash;
 
 }
+
+int hashmap_insert(HashMap *map, const char *key, void *value) {
+    if (map == NULL) return -1;  
+
+    unsigned long clef = simple_hash(key);
+
+    while (map->table[clef].key != NULL && map->table[clef].key != TOMBSTONE) {
+        clef = (clef + 1);
+    }
+
+    map->table[clef].key = strdup(key);  
+    map->table[clef].value = value;
+
+    return 0;  
+}
+
+
+void *hashmap_get(HashMap *map, const char *key){
+
+    unsigned long clef = simple_hash(key);
+
+    while (map->table[clef].key != NULL && map->table[clef].key != TOMBSTONE) {
+        if (strcmp(map->table[clef].key, key) == 0) {
+            return map->table[clef].value;
+        }
+        clef = (clef + 1);
+    }
+
+    return;
+
+}
