@@ -38,6 +38,11 @@ HashMap* hashmap_create(){
 int hashmap_insert(HashMap *map, const char *key, void *value) {
     if (map == NULL) return -1;  
 
+    if (map->size >= TABLE_SIZE) {
+        printf("Table pleine, insertion impossible\n");
+        return -1;
+    }
+    
     unsigned long clef = simple_hash(key);
 
     while (map->table[clef].key != NULL && map->table[clef].key != TOMBSTONE) {
@@ -77,7 +82,7 @@ int hashmap_remove(HashMap *map, const char *key) {
     while (map->table[index].key != NULL) {
         if (map->table[index].key != TOMBSTONE && strcmp(map->table[index].key, key) == 0) {
             free(map->table[index].key);
-            map->table[index].key = TOMBSTONE;
+            map->table[index].key = NULL;
             map->table[index].value = TOMBSTONE;
             map->size--;
             return 1;
