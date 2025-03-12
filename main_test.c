@@ -11,6 +11,20 @@ void print_free_list(MemoryHandler *handler) {
     printf("NULL\n");
 }
 
+void memory_destroy(MemoryHandler *handler) {
+    if (handler) {
+        Segment *current = handler->free_list;
+        while (current) {
+            Segment *temp = current;
+            current = current->next;
+            free(temp);
+        }
+        hashmap_destroy(handler->allocated);
+        free(handler->memory);
+        free(handler);
+    }
+}
+
 int main() {
     printf("===== Test du gestionnaire de mémoire =====\n");
 
@@ -49,7 +63,6 @@ int main() {
     print_free_list(handler);
 
     printf("\n>>> Nettoyage de la mémoire...\n");
-    free(handler->memory);
-    free(handler);
+    memory_destroy(handler);
     return 0;
 }
