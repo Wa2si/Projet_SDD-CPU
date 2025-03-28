@@ -47,7 +47,11 @@ int hashmap_insert(HashMap *map, const char *key, void *value) {
         clef = (clef + 1) % TABLE_SIZE;
     }
 
-    map->table[clef].key = strdup(key);  
+    map->table[clef].key = strdup(key);
+    if(map->table[clef].key == NULL){
+        printf("Erreur d'allocation mémoire <hashmap_insert> \n");
+        return -1;
+    }
     map->table[clef].value = value;
     map->size++;
 
