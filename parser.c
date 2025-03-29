@@ -93,3 +93,66 @@ Instruction *parse_data_instruction(const char *line, HashMap *memory_locations)
     free(line_copy);
     return inst;
 }
+
+Instruction *parse_code_instruction(const char *line, HashMap *labels, int code_count) {
+    if (line == NULL || labels == NULL) return NULL;
+
+    Instruction *inst = malloc(sizeof(Instruction));
+    if (!inst) {
+        printf("Erreur d'allocation mémoire : parse_code_instruction (Instruction)\n");
+        return NULL;
+    }
+
+    char *line_copy = strdup(line);
+    if (!line_copy) {
+        printf("Erreur d'allocation mémoire : parse_code_instruction (line_copy)\n");
+        free(inst);
+        return NULL;
+    }
+
+    char *label = NULL;
+    char *instruction_part = line_copy;
+
+    // Vérifie s’il y a un label (présence de ':')
+    char *colon = strchr(line_copy, ':');
+    if (colon != NULL) {
+        *colon = '\0';
+        label = line_copy;
+        instruction_part = colon + 1;
+        while (*instruction_part == ' ') instruction_part++;
+
+        // Enregistrer le label avec code_count comme valeur
+        hashmap_insert(labels, label, (void *)(intptr_t)code_count);
+    }
+
+    // Extraction du mnemonic
+    char *token = strtok(instruction_part, " ");
+    if (!token) {
+        printf("Erreur : ligne sans mnemonic\n");
+        free(line_copy);
+        free(inst);
+        return NULL;
+    }
+    inst->mnemonic = strdup(token);
+
+    // Extraction de l’opérande 1
+    token = strtok(NULL, ",");
+    if (token != NULL) {
+        while (*token == ' ') token++;
+        inst->operand1 = strdup(token);
+    } else {
+        inst->operand1 = strdup("");
+    }
+
+    // Extraction de l’opérande 2
+    token = strtok(NULL, "\n");
+    if (token != NULL) {
+        while (*token == ' ') token++;
+        inst->operand2 = strdup(token);
+    } else {
+        inst->operand2 = strdup("");
+    }
+
+    free(line_copy);
+    return inst;
+}
