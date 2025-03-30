@@ -156,3 +156,69 @@ Instruction *parse_code_instruction(const char *line, HashMap *labels, int code_
     free(line_copy);
     return inst;
 }
+
+
+ParserResult *parse(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Erreur : impossible d'ouvrir le fichier %s\n", filename);
+        return NULL;
+    }
+
+    ParserResult *result = malloc(sizeof(ParserResult));
+    if (!result) {
+        printf("Erreur d'allocation mémoire : ParserResult\n");
+        fclose(file);
+        return NULL;
+    }
+
+    result->data_instructions = NULL;
+    result->data_count = 0;
+    result->code_instructions = NULL;
+    result->code_count = 0;
+    result->memory_locations = hashmap_create();
+    result->labels = hashmap_create();
+
+    char buffer[256];
+    int mode = 0; // 1 = .DATA, 2 = .CODE
+
+    while (fgets(buffer, sizeof(buffer), file)) {
+
+        if (strcmp(buffer, ".DATA\n") == 0) {
+            mode = 1;
+            continue;
+        }
+        if (strcmp(buffer, ".CODE\n") == 0) {
+            mode = 2;
+            continue;
+        }
+
+        if (mode == 1) {
+            Instruction *inst = parse_data_instruction(buffer, result->memory_locations);
+            if (inst) {
+                Instruction **temp = realloc(result->data_instructions, sizeof(Instruction *) * (result->data_count + 1));
+                if (!temp) {
+                    printf("Erreur realloc pour data_instructions\n");
+                    fclose(file);
+                    return NULL;
+                }
+                result->data_instructions = temp;
+            }
+        } else if (mode == 2) {
+            Instruction *inst = parse_code_instruction(buffer, result->labels, result->code_count);
+            if (inst) {
+                Instruction **temp = realloc(result->code_instructions, sizeof(Instruction *) * (result->code_count + 1));
+                if (!temp) {
+                    printf("Erreur realloc pour code_instructions\n");
+                    fclose(file);
+                    return NULL;
+                }
+                result->code_instructions = temp;
+
+            }
+        }
+    }
+
+    fclose(file);
+    return result;
+}
