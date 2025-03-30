@@ -183,12 +183,17 @@ ParserResult *parse(const char *filename) {
     int mode = 0; // 1 = .DATA, 2 = .CODE
 
     while (fgets(buffer, sizeof(buffer), file)) {
+        // Supprimer saut de ligne (\n ou \r)
+        buffer[strcspn(buffer, "\r\n")] = '\0';
 
-        if (strcmp(buffer, ".DATA\n") == 0) {
+        // Ligne vide ou commentaire (optionnel à ajouter)
+        if (buffer[0] == '\0') continue;
+
+        if (strcmp(buffer, ".DATA") == 0) {
             mode = 1;
             continue;
         }
-        if (strcmp(buffer, ".CODE\n") == 0) {
+        if (strcmp(buffer, ".CODE") == 0) {
             mode = 2;
             continue;
         }
@@ -203,6 +208,7 @@ ParserResult *parse(const char *filename) {
                     return NULL;
                 }
                 result->data_instructions = temp;
+                result->data_instructions[result->data_count++] = inst;
             }
         } else if (mode == 2) {
             Instruction *inst = parse_code_instruction(buffer, result->labels, result->code_count);
@@ -214,11 +220,43 @@ ParserResult *parse(const char *filename) {
                     return NULL;
                 }
                 result->code_instructions = temp;
-
+                result->code_instructions[result->code_count++] = inst;
             }
         }
     }
 
     fclose(file);
     return result;
+}
+
+
+void free_parser_result(ParserResult *result) {
+    if (!result) return;
+
+    // Libérer les instructions .DATA
+    for (int i = 0; i < result->data_count; i++) {
+        Instruction *inst = result->data_instructions[i];
+        free(inst->mnemonic);
+        free(inst->operand1);
+        free(inst->operand2);
+        free(inst);
+    }
+    free(result->data_instructions);
+
+    // Libérer les instructions .CODE
+    for (int i = 0; i < result->code_count; i++) {
+        Instruction *inst = result->code_instructions[i];
+        free(inst->mnemonic);
+        free(inst->operand1);
+        free(inst->operand2);
+        free(inst);
+    }
+    free(result->code_instructions);
+
+    // Libérer les hashmaps
+    hashmap_destroy(result->memory_locations);
+    hashmap_destroy(result->labels);
+
+    // Libérer la structure globale
+    free(result);
 }

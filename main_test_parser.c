@@ -5,58 +5,42 @@
 #include "hash.h"
 
 int main() {
-    // --- Test parse_data_instruction ---
-    HashMap *memory_locations = hashmap_create();
-    const char *data_line = "arr DB 5,6,7";
-    Instruction *data_inst = parse_data_instruction(data_line, memory_locations);
+    printf("=== Test du fichier test_parser.txt ===\n");
 
-    printf("=== Test .DATA ===\n");
-    if (data_inst != NULL) {
-        printf("Instruction analysée :\n");
-        printf("  mnemonic  : %s\n", data_inst->mnemonic);
-        printf("  operand1  : %s\n", data_inst->operand1);
-        printf("  operand2  : %s\n", data_inst->operand2);
+    ParserResult *result = parse("test_parser.txt");
 
-        void *addr_ptr = hashmap_get(memory_locations, "arr");
-        int addr = (int)(intptr_t)addr_ptr;
-        printf("Adresse associée à 'arr' : %d\n", addr);
-        
+    if (result) {
+        printf("\n--- .DATA ---\n");
+        for (int i = 0; i < result->data_count; i++) {
+            Instruction *inst = result->data_instructions[i];
+            printf("  [%d] %s %s %s\n", i, inst->mnemonic, inst->operand1, inst->operand2);
+        }
+
+        printf("\n--- .CODE ---\n");
+        for (int i = 0; i < result->code_count; i++) {
+            Instruction *inst = result->code_instructions[i];
+            printf("  [%d] %s %s %s\n", i, inst->mnemonic, inst->operand1, inst->operand2);
+        }
+
+        printf("\n--- LABELS ---\n");
+        const char *labels[] = {"start", "loop"};
+        for (int i = 0; i < 2; i++) {
+            void *addr = hashmap_get(result->labels, labels[i]);
+            printf("  %s → %d\n", labels[i], (int)(intptr_t)addr);
+        }
+
+        printf("\n--- MEMORY LOCATIONS ---\n");
+        const char *vars[] = {"x", "arr", "y"};
+        for (int i = 0; i < 3; i++) {
+            void *addr = hashmap_get(result->memory_locations, vars[i]);
+            printf("  %s → %d\n", vars[i], (int)(intptr_t)addr);
+        }
+
+        free_parser_result(result);
+
     } else {
-        printf("Échec du parsing de .DATA.\n");
+        printf("Échec du parsing de test_parser.txt\n");
     }
-
-    // --- Test parse_code_instruction ---
-    HashMap *labels = hashmap_create();
-    const char *code_line = "loop: MOV AX, 1";
-    Instruction *code_inst = parse_code_instruction(code_line, labels, 0); // code_count = 0
-
-    printf("\n=== Test .CODE ===\n");
-    if (code_inst != NULL) {
-        printf("Instruction analysée :\n");
-        printf("  mnemonic  : %s\n", code_inst->mnemonic);
-        printf("  operand1  : %s\n", code_inst->operand1);
-        printf("  operand2  : %s\n", code_inst->operand2);
-
-        void *label_addr = hashmap_get(labels, "loop");
-        int index = (int)(intptr_t)label_addr;
-        printf("Index associé au label 'loop' : %d\n", index);
-    } else {
-        printf("Échec du parsing de .CODE.\n");
-    }
-
-    // Libération mémoire
-    free(data_inst->mnemonic);
-    free(data_inst->operand1);
-    free(data_inst->operand2);
-    free(data_inst);
-
-    free(code_inst->mnemonic);
-    free(code_inst->operand1);
-    free(code_inst->operand2);
-    free(code_inst);
-
-    hashmap_destroy(memory_locations);
-    hashmap_destroy(labels);
 
     return 0;
 }
