@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "hash.h"
-#include "memory.h"
 
 typedef struct {
     char *mnemonic;
