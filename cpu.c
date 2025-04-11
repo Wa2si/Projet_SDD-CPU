@@ -106,14 +106,14 @@ void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_coun
     // Étape 1 : calculer la taille totale du segment
     for (int i = 0; i < data_count; i++) {
         Instruction *inst = data_instructions[i];
-        if (strcmp(inst->mnemonic, "DB") == 0) {
+        if (strcmp(inst->operand1, "DB") == 0) {
             // Liste de valeurs séparées par des virgules
             char *token = strtok(inst->operand2, ",");
             while (token) {
                 total_size++;
                 token = strtok(NULL, ",");
             }
-        } else if (strcmp(inst->mnemonic, "DW") == 0) {
+        } else if (strcmp(inst->operand1, "DW") == 0) {
             total_size++;
         }
     }
@@ -129,7 +129,7 @@ void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_coun
     for (int i = 0; i < data_count; i++) {
         Instruction *inst = data_instructions[i];
 
-        if (strcmp(inst->mnemonic, "DB") == 0) {
+        if (strcmp(inst->operand1, "DB") == 0) {
             char *token = strtok(inst->operand2, ",");
             while (token) {
                 int *value = malloc(sizeof(int));
@@ -137,7 +137,7 @@ void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_coun
                 store(cpu->memory_handler, "DS", pos++, value);
                 token = strtok(NULL, ",");
             }
-        } else if (strcmp(inst->mnemonic, "DW") == 0) {
+        } else if (strcmp(inst->operand1, "DW") == 0) {
             int *value = malloc(sizeof(int));
             *value = atoi(inst->operand2);
             store(cpu->memory_handler, "DS", pos++, value);
