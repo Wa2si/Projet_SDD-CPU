@@ -107,12 +107,13 @@ void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_coun
     for (int i = 0; i < data_count; i++) {
         Instruction *inst = data_instructions[i];
         if (strcmp(inst->operand1, "DB") == 0) {
-            // Liste de valeurs séparées par des virgules
-            char *token = strtok(inst->operand2, ",");
+            char *copy = strdup(inst->operand2);
+            char *token = strtok(copy, ";");
             while (token) {
                 total_size++;
-                token = strtok(NULL, ",");
+                token = strtok(NULL, ";");
             }
+            free(copy);
         } else if (strcmp(inst->operand1, "DW") == 0) {
             total_size++;
         }
@@ -130,13 +131,15 @@ void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_coun
         Instruction *inst = data_instructions[i];
 
         if (strcmp(inst->operand1, "DB") == 0) {
-            char *token = strtok(inst->operand2, ",");
+            char *copy = strdup(inst->operand2);
+            char *token = strtok(copy, ";");
             while (token) {
                 int *value = malloc(sizeof(int));
                 *value = atoi(token);
                 store(cpu->memory_handler, "DS", pos++, value);
-                token = strtok(NULL, ",");
+                token = strtok(NULL, ";");
             }
+            free(copy);
         } else if (strcmp(inst->operand1, "DW") == 0) {
             int *value = malloc(sizeof(int));
             *value = atoi(inst->operand2);
