@@ -43,15 +43,53 @@ CPU *cpu_init(int memory_size) {
 void cpu_destroy(CPU *cpu) {
     if (!cpu) return;
 
-    // Libérer les registres
-    for (int i = 0; i < cpu->context->size; ++i) {
-        if (cpu->context->table[i].key != NULL && cpu->context->table[i].value != TOMBSTONE) {
-            free(cpu->context->table[i].value);
+    // Libérer la hashmap du cpu
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        if (cpu->context->table[i].value != NULL &&
+            cpu->context->table[i].value != TOMBSTONE) {
+            free(cpu->context->table[i].value); // libère les int* des registres
+        }
+    }
+    hashmap_destroy(cpu->context);
+
+    // Libérer les données du segment "DS"
+    Segment *segment = hashmap_get(cpu->memory_handler->allocated, "DS");
+    if (segment) {
+        for (int i = 0; i < segment->size; i++) {
+            int index = segment->start + i;
+            if (cpu->memory_handler->memory[index]) {
+                free(cpu->memory_handler->memory[index]);
+            }
         }
     }
 
-    hashmap_destroy(cpu->context);
+    remove_segment(cpu->memory_handler, "DS");
+
+    // Libérer tous les Segment* contenus dans allocated
+    for (int i = 0; i < cpu->memory_handler->allocated->size; ++i) {
+        void *val = cpu->memory_handler->allocated->table[i].value;
+        if (val != NULL && val != TOMBSTONE) {
+            free(val);
+        }
+    }
+
+    hashmap_destroy(cpu->memory_handler->allocated);
+
+    // Libérer la liste chaînée free_list
+    Segment *current = cpu->memory_handler->free_list;
+    while (current) {
+        Segment *next = current->next;
+        free(current);
+        current = next;
+    }
+
+    // Libérer le tableau de mémoire
+    free(cpu->memory_handler->memory);
+
+    // Libérer la structure MemoryHandler
     free(cpu->memory_handler);
+
+    // Libérer la structure CPU
     free(cpu);
 }
 
