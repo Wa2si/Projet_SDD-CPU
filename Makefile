@@ -15,6 +15,10 @@ test_parser: parser.o memory.o hash.o main_test_parser.o
 test_cpu: main_test_cpu.o cpu.o memory.o hash.o parser.o
 	$(CC) -o test_cpu main_test_cpu.o cpu.o memory.o hash.o parser.o
 
+# Compilation du test du setup
+test_setup: main_test_setup.o cpu.o memory.o hash.o
+	$(CC) $(CFLAGS) -o test_setup main_test_setup.o cpu.o memory.o hash.o -lm
+
 hash.o: hash.c hash.h
 	$(CC) $(CFLAGS) -c hash.c
 
@@ -32,6 +36,9 @@ main_test_parser.o: main_test_parser.c parser.h hash.h
 
 main_test_cpu.o: main_test_cpu.c cpu.h memory.h hash.h parser.h
 	$(CC) $(CFLAGS) -c main_test_cpu.c
+
+main_test_setup.o: main_test_setup.c cpu.h memory.h hash.h
+	$(CC) $(CFLAGS) -c main_test_setup.c
 
 clean:
 	rm -f *.o test_memory test_parser

@@ -9,6 +9,7 @@
 typedef struct {
     MemoryHandler *memory_handler;
     HashMap *context;
+    HashMap *constant_pool; // Table de hachage pour stocker les valeurs immédiates
 } CPU;
 
 // Initialise un CPU avec une mémoire de taille donnée
@@ -28,5 +29,20 @@ void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_coun
 
 // Affiche le contenu du segment "DS"
 void print_data_segment(CPU *cpu);
+
+// Traite l'adressage immédiat
+void *immediate_addressing(CPU *cpu, const char *operand);
+
+// Traite l'adressage par registre
+void *register_addressing(CPU *cpu, const char *operand);
+
+// Traite l'adressage direct
+void *memory_direct_addressing(CPU *cpu, const char *operand);
+
+// Traite l'adressage indirect par registre
+void *register_indirect_addressing(CPU *cpu, const char *operand);
+
+// Effectue l'instruction MOV
+void handle_MOV(CPU* cpu, void* src, void* dest);
 
 #endif
