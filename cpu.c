@@ -4,15 +4,16 @@
 #include <regex.h>
 #include "cpu.h"
 
+// Fonction fournie dans l'énoncé
 int matches(const char *pattern , const char *string) {
     regex_t regex;
-    int result = regcomp (&regex , pattern , REG_EXTENDED);
+    int result = regcomp (&regex, pattern, REG_EXTENDED);
     if (result) {
-        fprintf(stderr , "Regex compilation failed for pattern:%s\n" , pattern);
+        fprintf(stderr, "Regex compilation failed for pattern:%s\n", pattern);
         return 0;
     }
-    result = regexec (&regex , string , 0, NULL , 0);
-    regfree (& regex);
+    result = regexec (&regex, string, 0, NULL, 0);
+    regfree (&regex);
     return result == 0;
 }
 

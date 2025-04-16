@@ -25,4 +25,6 @@ Instruction *parse_code_instruction(const char *line, HashMap *labels, int code_
 ParserResult *parse(const char *filename);
 void free_parser_result(ParserResult *result);
 
+int resolve_constants(ParserResult *result);
+
 #endif
