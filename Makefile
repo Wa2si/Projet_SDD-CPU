@@ -48,6 +48,6 @@ main_test_run.o: main_test_run.c parser.h cpu.h
 	$(CC) $(CFLAGS) -c main_test_run.c
 
 clean:
-	rm -f *.o test_memory test_parser
+	rm -f *.o test_memory test_parser test_cpu test_setup test_run
 
 .PHONY: all clean
