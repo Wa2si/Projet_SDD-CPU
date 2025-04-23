@@ -41,7 +41,10 @@ Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment*
     *prev = NULL;
 
     while (current != NULL) {
-        if (current->start <= start && (current->start + current->size) >= (start + size)) {
+        if ((current->start + current->size) >= (start + size)) {
+            if (current->start > start) {
+                start = current->start;
+            }
             return current;
         }
 

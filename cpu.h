@@ -12,37 +12,24 @@ typedef struct {
     HashMap *constant_pool; // Table de hachage pour stocker les valeurs immédiates
 } CPU;
 
-// Initialise un CPU avec une mémoire de taille donnée
 CPU *cpu_init(int memory_size);
-
-// Libère les ressources allouées par le CPU
 void cpu_destroy(CPU *cpu);
-
-// Stocke une donnée à une position donnée dans un segment
 void* store(MemoryHandler *handler, const char *segment_name, int pos, void *data);
-
-// Récupère une donnée depuis une position dans un segment
 void* load(MemoryHandler *handler, const char *segment_name, int pos);
-
-// Alloue dynamiquement les variables selon les instructions .DATA
 void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_count);
-
-// Affiche le contenu du segment "DS"
 void print_data_segment(CPU *cpu);
 
-// Traite l'adressage immédiat
 void *immediate_addressing(CPU *cpu, const char *operand);
-
-// Traite l'adressage par registre
 void *register_addressing(CPU *cpu, const char *operand);
-
-// Traite l'adressage direct
 void *memory_direct_addressing(CPU *cpu, const char *operand);
-
-// Traite l'adressage indirect par registre
 void *register_indirect_addressing(CPU *cpu, const char *operand);
 
-// Effectue l'instruction MOV
 void handle_MOV(CPU* cpu, void* src, void* dest);
+
+void allocate_code_segment(CPU *cpu, Instruction **code_instructions, int code_count);
+int handle_instruction(CPU *cpu, Instruction *instr, void *src, void *dest);
+int execute_instruction(CPU *cpu, Instruction *instr);
+Instruction *fetch_next_instruction(CPU *cpu);
+int run_program(CPU *cpu);
 
 #endif

@@ -1,0 +1,9 @@
+.DATA
+a DW 25
+b DW 40
+
+.CODE
+MOV AX, a
+MOV BX, b
+MOV CX, [0]
+MOV [1], AX

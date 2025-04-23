@@ -49,8 +49,8 @@ CPU *cpu_init(int memory_size) {
     }
 
     // Initialiser les registres AX, BX, CX, DX à 0
-    const char *registers[] = {"AX", "BX", "CX", "DX"};
-    for (int i = 0; i < 4; ++i) {
+    const char *registers[] = {"AX", "BX", "CX", "DX", "IP", "ZF", "SF"};
+    for (int i = 0; i < 7; ++i) {
         int *value = malloc(sizeof(int));
         if (!value) {
             printf("Avertissement : échec de l'allocation pour le registre %s.\n", registers[i]);
@@ -189,8 +189,17 @@ void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_coun
         }
     }
 
-    // Étape 2 : allouer le segment "DS"
-    if (create_segment(cpu->memory_handler, "DS", 0, total_size) != 0) {
+    // Étape 2 : chercher une zone libre avec find_free_segment
+    Segment *prev = NULL;
+    Segment *free_seg = find_free_segment(cpu->memory_handler, 0, total_size, &prev);
+
+    if (!free_seg) {
+        printf("Erreur : aucun segment libre trouvé pour les données.\n");
+        return;
+    }
+
+    int start = (free_seg->start >= 0) ? free_seg->start : 0;
+    if (create_segment(cpu->memory_handler, "DS", start, total_size) != 0) {
         printf("Erreur : impossible d'allouer le segment DS.\n");
         return;
     }
@@ -205,6 +214,11 @@ void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_coun
             char *token = strtok(copy, ";");
             while (token) {
                 int *value = malloc(sizeof(int));
+                if (!value) {
+                    printf("Erreur : allocation mémoire échouée.\n");
+                    free(copy);
+                    return;
+                }
                 *value = atoi(token);
                 store(cpu->memory_handler, "DS", pos++, value);
                 token = strtok(NULL, ";");
@@ -212,6 +226,10 @@ void allocate_variables(CPU *cpu, Instruction **data_instructions, int data_coun
             free(copy);
         } else if (strcmp(inst->operand1, "DW") == 0) {
             int *value = malloc(sizeof(int));
+            if (!value) {
+                printf("Erreur : allocation mémoire échouée.\n");
+                return;
+            }
             *value = atoi(inst->operand2);
             store(cpu->memory_handler, "DS", pos++, value);
         }
@@ -323,4 +341,153 @@ void handle_MOV(CPU *cpu, void *src, void *dest) {
     if (!cpu || !src || !dest) return;
 
     *(int *)dest = *(int *)src;
+}
+
+void allocate_code_segment(CPU *cpu, Instruction **code_instructions, int code_count) {
+    if (!cpu || !code_instructions || code_count <= 0) return;
+
+    Segment *prev = NULL;
+    // Chercher une zone libre dans la free_list
+    Segment *free_seg = find_free_segment(cpu->memory_handler, 0, code_count, &prev);
+
+    if (!free_seg) {
+        printf("Erreur : aucun segment libre trouvé pour le code.\n");
+        return;
+    }
+
+    // Créer le segment CS à l’endroit trouvé
+    int start = (free_seg->start >= 0) ? free_seg->start : 0;
+    if (create_segment(cpu->memory_handler, "CS", start, code_count) != 0) {
+        printf("Erreur : allocation du segment CS échouée.\n");
+        return;
+    }
+
+    // Stocker les instructions dans le segment CS
+    for (int i = 0; i < code_count; i++) {
+        store(cpu->memory_handler, "CS", i, code_instructions[i]);
+    }
+
+    // Initialiser le registre IP à 0
+    int *ip = (int *) hashmap_get(cpu->context, "IP");
+    if (ip) {
+        *ip = 0;
+    } else {
+        printf("Erreur : registre IP introuvable.\n");
+    }
+}
+
+int handle_instruction(CPU *cpu, Instruction *instr, void *src, void *dest) {
+    if (!cpu || !instr) return 0;
+
+    if (strcmp(instr->mnemonic, "MOV") == 0) {
+        handle_MOV(cpu, src, dest);
+
+        // Affichage de l'instruction exécutée
+        printf("Instruction exécutée : MOV %s, %s\n", instr->operand1, instr->operand2);
+
+        return 1;
+    }
+
+    printf("Instruction non supportée : %s\n", instr->mnemonic);
+    return 0;
+}
+
+int execute_instruction(CPU *cpu, Instruction *instr) {
+    if (!cpu || !instr || !instr->mnemonic) {
+        printf("Erreur : instruction invalide.\n");
+        return 0;
+    }
+
+    void *src = NULL;
+    void *dest = NULL;
+
+    if (instr->operand2) {
+        src = register_addressing(cpu, instr->operand2);
+        if (!src) src = register_indirect_addressing(cpu, instr->operand2);
+        if (!src) src = memory_direct_addressing(cpu, instr->operand2);
+        if (!src) src = immediate_addressing(cpu, instr->operand2);
+    }
+
+    if (instr->operand1) {
+        dest = register_addressing(cpu, instr->operand1);
+        if (!dest) dest = register_indirect_addressing(cpu, instr->operand1);
+        if (!dest) dest = memory_direct_addressing(cpu, instr->operand1);
+    }
+
+    // Exécution
+    return handle_instruction(cpu, instr, src, dest);
+}
+
+Instruction *fetch_next_instruction(CPU *cpu) {
+    if (!cpu) return NULL;
+
+    int *ip = hashmap_get(cpu->context, "IP");
+    if (!ip) {
+        printf("Erreur : registre IP introuvable.\n");
+        return NULL;
+    }
+
+    Instruction *instr = (Instruction *)load(cpu->memory_handler, "CS", *ip);
+    if (!instr) {
+        printf("Fin du programme atteinte.\n");
+        return NULL;
+    }
+
+    (*ip)++;
+    return instr;
+}
+
+int run_program(CPU *cpu) {
+    if (!cpu) return 0;
+
+    printf("Début de l'exécution du programme...\n");
+
+    // === ÉTAPE 1 : Affichage initial ===
+    printf("\n--- État initial du CPU ---\n");
+    const char *regs[] = {"AX", "BX", "CX", "DX", "IP", "SP", "BP"};
+    for (int i = 0; i < 7; ++i) {
+        int *val = hashmap_get(cpu->context, regs[i]);
+        if (val) printf("  %s = %d\n", regs[i], *val);
+    }
+
+    printf("\n--- Mémoire initiale (segment DS) ---\n");
+    print_data_segment(cpu);
+
+    printf("\nAppuyez sur [Entrée] pour exécuter l'instruction suivante ou sur 'q' pour quitter.\n\n");
+
+    int instructions_executed = 0;
+
+    // === ÉTAPE 2 : Boucle d'exécution ===
+    while (1) {
+        char c = getchar();
+        if (c == 'q') {
+            printf("Exécution interrompue par l'utilisateur.\n");
+            break;
+        }
+
+        Instruction *instr = fetch_next_instruction(cpu);
+        if (!instr) {
+            printf("Aucune instruction à exécuter (peut-être fin du programme).\n");
+            break;
+        }
+
+        execute_instruction(cpu, instr);
+        instructions_executed++;
+
+        // Nettoyage du buffer clavier
+        while ((c = getchar()) != '\n' && c != EOF);
+    }
+
+    // === ÉTAPE 3 : Affichage final ===
+    printf("\n--- État final du CPU ---\n");
+    for (int i = 0; i < 7; ++i) {
+        int *val = hashmap_get(cpu->context, regs[i]);
+        if (val) printf("  %s = %d\n", regs[i], *val);
+    }
+
+    printf("\n--- Mémoire finale (segment DS) ---\n");
+    print_data_segment(cpu);
+
+    printf("\nFin de l'exécution. Instructions exécutées : %d\n", instructions_executed);
+    return instructions_executed;
 }
