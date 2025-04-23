@@ -1,5 +1,6 @@
 #include "memory.h"
 
+/* Initialise le gestionnaire de mémoire avec une taille donnée */
 MemoryHandler *memory_init(int size){
 
     MemoryHandler *handler = malloc(sizeof(MemoryHandler));
@@ -33,6 +34,7 @@ MemoryHandler *memory_init(int size){
     return handler;
 }
 
+/* Recherche un segment libre de taille suffisante */
 Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment** prev) {
     if (handler == NULL || handler->free_list == NULL)
         return NULL;
@@ -55,6 +57,7 @@ Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment*
     return NULL;
 }
 
+/* Crée un nouveau segment mémoire nommé et l’insère dans la table */
 int create_segment(MemoryHandler *handler, const char *name, int start, int size) {
     if (handler == NULL || handler->free_list == NULL)
         return -1;
@@ -97,6 +100,7 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
     return 0;
 }
 
+/* Supprime un segment mémoire existant et libère la zone */
 int remove_segment(MemoryHandler *handler, const char *name) {
     if (handler == NULL || name == NULL)
         return -1;

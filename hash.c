@@ -1,6 +1,6 @@
 #include"hash.h"
 
-
+/* Calcule un hash simple pour une chaîne de caractères */
 unsigned long simple_hash(const char *str) {
     unsigned long hash = 0;
     int i = 0;
@@ -13,6 +13,7 @@ unsigned long simple_hash(const char *str) {
     return hash % TABLE_SIZE;  
 }
 
+/* Crée et initialise une table de hachage vide */
 HashMap* hashmap_create(){
     HashMap* new_hash = malloc(sizeof(HashMap));
     if(new_hash == NULL){
@@ -33,6 +34,8 @@ HashMap* hashmap_create(){
     return new_hash;
 }
 
+
+/* Insère une paire clé/valeur dans la table de hachage */
 int hashmap_insert(HashMap *map, const char *key, void *value) {
     if (map == NULL) return -1;  
 
@@ -58,7 +61,7 @@ int hashmap_insert(HashMap *map, const char *key, void *value) {
     return 0;  
 }
 
-
+/* Récupère une valeur associée à une clé dans la table */
 void *hashmap_get(HashMap *map, const char *key){
 
     unsigned long clef = simple_hash(key);
@@ -73,7 +76,7 @@ void *hashmap_get(HashMap *map, const char *key){
     return NULL;
 }
 
-
+/* Supprime une entrée de la table de hachage */
 int hashmap_remove(HashMap *map, const char *key) {
     if (map == NULL || key == NULL)
         return 0;
@@ -96,7 +99,7 @@ int hashmap_remove(HashMap *map, const char *key) {
     return 0;
 }
 
-
+/* Libère toute la mémoire occupée par la table de hachage */
 void hashmap_destroy(HashMap *map) {
     if (map == NULL)
         return;
