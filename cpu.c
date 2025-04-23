@@ -97,6 +97,8 @@ void cpu_destroy(CPU *cpu) {
 
     remove_segment(cpu->memory_handler, "DS");
 
+    remove_segment(cpu->memory_handler, "CS");
+
     // Libérer tous les Segment* contenus dans allocated
     for (int i = 0; i < cpu->memory_handler->allocated->size; ++i) {
         void *val = cpu->memory_handler->allocated->table[i].value;

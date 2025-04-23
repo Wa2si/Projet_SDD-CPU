@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -g
 
-all: test_memory test_parser test_cpu test_setup
+all: test_memory test_parser test_cpu test_setup test_run
 
 # Compilation du test de memory
 test_memory: memory.o hash.o main_test_memory.o
