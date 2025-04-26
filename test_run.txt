@@ -7,3 +7,5 @@ MOV AX, a
 MOV BX, b
 MOV CX, [0]
 MOV [1], AX
+ADD DX, CX
+CMP DX, 5

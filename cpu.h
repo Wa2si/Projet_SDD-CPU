@@ -25,6 +25,8 @@ void *memory_direct_addressing(CPU *cpu, const char *operand);
 void *register_indirect_addressing(CPU *cpu, const char *operand);
 
 void handle_MOV(CPU* cpu, void* src, void* dest);
+void handle_ADD(CPU* cpu, void* src, void* dest);
+void handle_CMP(CPU* cpu, void* src, void* dest);
 
 void allocate_code_segment(CPU *cpu, Instruction **code_instructions, int code_count);
 int handle_instruction(CPU *cpu, Instruction *instr, void *src, void *dest);

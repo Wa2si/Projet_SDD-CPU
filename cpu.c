@@ -345,6 +345,24 @@ void handle_MOV(CPU *cpu, void *src, void *dest) {
     *(int *)dest = *(int *)src;
 }
 
+void handle_ADD(CPU* cpu, void* src, void* dest) {
+    if (!cpu || !src || !dest) return;
+
+    *(int*)dest += *(int*)src;
+}
+
+void handle_CMP(CPU* cpu, void* src, void* dest) {
+    if (!cpu || !src || !dest) return;
+
+    int result = (*(int*)dest) - (*(int*)src);
+
+    int *zf = hashmap_get(cpu->context, "ZF");
+    int *sf = hashmap_get(cpu->context, "SF");
+
+    if (zf) *zf = (result == 0);
+    if (sf) *sf = (result < 0);
+}
+
 void allocate_code_segment(CPU *cpu, Instruction **code_instructions, int code_count) {
     if (!cpu || !code_instructions || code_count <= 0) return;
 
@@ -386,6 +404,24 @@ int handle_instruction(CPU *cpu, Instruction *instr, void *src, void *dest) {
 
         // Affichage de l'instruction exécutée
         printf("Instruction exécutée : MOV %s, %s\n", instr->operand1, instr->operand2);
+
+        return 1;
+    }
+
+    else if (strcmp(instr->mnemonic, "ADD") == 0) {
+        handle_ADD(cpu, src, dest);
+
+        // Affichage de l'instruction exécutée
+        printf("Instruction exécutée : ADD %s, %s\n", instr->operand1, instr->operand2);
+
+        return 1;
+    }
+
+    else if (strcmp(instr->mnemonic, "CMP") == 0) {
+        handle_CMP(cpu, src, dest);
+
+        // Affichage de l'instruction exécutée
+        printf("Instruction exécutée : CMP %s, %s\n", instr->operand1, instr->operand2);
 
         return 1;
     }
