@@ -124,4 +124,6 @@ Pour voir comment le parseur analyse un fichier (par exemple, `test_parser.txt`)
 | `Makefile` | Script de construction pour compiler le projet. |
 
 ## 👥 Auteurs
-- **Wa2si** (et l'équipe)
+- **Wa2si**
+- **Florent**
+
